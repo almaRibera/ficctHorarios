@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-# Instalar dependencias del sistema
+# Instalar dependencias
 RUN apt-get update && apt-get install -y \
     libpq-dev libzip-dev zip unzip git curl \
     libpng-dev libonig-dev libxml2-dev \
@@ -8,29 +8,22 @@ RUN apt-get update && apt-get install -y \
     && a2enmod rewrite
 
 # Configurar Apache
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/conf-available/*.conf
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Crear estructura de directorios
-RUN mkdir -p /var/www/html/storage/framework/{sessions,views,cache} \
-    && mkdir -p /var/www/html/storage/logs \
-    && mkdir -p /var/www/html/bootstrap/cache
-
-# Copiar aplicación
+# Copiar código
 COPY . /var/www/html
 WORKDIR /var/www/html
 
-# Dar permisos simples
-RUN chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
-
-# Instalar Composer
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Script de inicio
-COPY render-start.sh /usr/local/bin/
+COPY render-start.sh /usr/local/bin/render-start.sh
 RUN chmod +x /usr/local/bin/render-start.sh
+
+# Permisos iniciales (serán reforzados en start.sh)
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 CMD ["/usr/local/bin/render-start.sh"]

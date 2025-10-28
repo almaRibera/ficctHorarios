@@ -1,33 +1,41 @@
 #!/bin/bash
+set -e
 
 cd /var/www/html
 
-echo "🔧 INICIANDO CONFIGURACIÓN..."
+echo "Iniciando aplicación Laravel en Render..."
 
-# Permisos básicos
-chmod -R 755 storage bootstrap/cache
+# SOLO si NO existe .env (evita sobrescribir en producción)
+if [ ! -f .env ]; then
+    echo "Creando .env de respaldo..."
+    cp .env.example .env
+else
+    echo ".env ya existe, saltando creación."
+fi
 
-
-
-# Instalar dependencias
-composer install --no-dev --optimize-autoloader --no-interaction
+# PERMISOS: SOLO storage y bootstrap/cache
+echo "Aplicando permisos correctos..."
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
 
 # Limpiar cache
 php artisan config:clear
 php artisan cache:clear
 php artisan view:clear
+php artisan route:clear
 
-# Esperar para BD
-echo "⏳ Esperando PostgreSQL..."
-sleep 10
+# Instalar dependencias (solo si no están)
+if [ ! -d "vendor" ]; then
+    composer install --no-dev --optimize-autoloader --no-interaction
+fi
 
 # Migraciones
 php artisan migrate --force
 
-# Cache para producción
+# Cachear (producción)
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-echo "🎉 APLICACIÓN LISTA"
+echo "Iniciando Apache..."
 exec apache2-foreground
