@@ -1,0 +1,14 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "/usr/local/bin/start.sh"
+
+[build.env]
+NODE_VERSION = "18"
+
+[env]
+APP_ENV = "production"
+APP_DEBUG = "false"
+LOG_LEVEL = "error"
