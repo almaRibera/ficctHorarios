@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-# Instalar dependencias del sistema
+# Instalar dependencias
 RUN apt-get update && apt-get install -y \
     libpq-dev libzip-dev zip unzip git curl \
     libpng-dev libonig-dev libxml2-dev \
@@ -12,16 +12,18 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
-# Crear directorios de storage con permisos
+# Crear estructura de directorios con permisos MÁXIMOS desde el inicio
 RUN mkdir -p /var/www/html/storage/framework/{sessions,views,cache} \
     && mkdir -p /var/www/html/storage/logs \
     && mkdir -p /var/www/html/bootstrap/cache \
-    && chmod -R 777 /var/www/html/storage \
-    && chmod -R 777 /var/www/html/bootstrap/cache
+    && chmod -R 777 /var/www/html
 
 # Copiar aplicación
 COPY . /var/www/html
 WORKDIR /var/www/html
+
+# Dar permisos MÁXIMOS a todo
+RUN chmod -R 777 /var/www/html
 
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

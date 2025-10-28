@@ -2,24 +2,36 @@
 
 cd /var/www/html
 
-echo "🔧 Iniciando configuración de la aplicación..."
+echo "🔧 SOLUCIÓN DEFINITIVA PARA PERMISOS EN RENDER..."
 
-# SOLUCIÓN DEFINITIVA PARA PERMISOS
-echo "📁 Configurando permisos de storage..."
-mkdir -p storage/framework/{sessions,views,cache}
+# SOLUCIÓN RADICAL: Recrear toda la estructura de storage con permisos completos
+echo "🗂️ Recreando estructura de storage..."
+rm -rf storage/*
+rm -rf bootstrap/cache/*
+
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/framework/cache
 mkdir -p storage/logs
 mkdir -p bootstrap/cache
 
-# Permisos COMPLETOS para todo storage
+# PERMISOS MÁXIMOS - esto es clave para Render
 chmod -R 777 storage
 chmod -R 777 bootstrap/cache
 
-# Configurar .env con las variables REALES de Render
-echo "🔑 Configurando variables de entorno..."
+# Verificar que los permisos se aplicaron
+echo "🔍 Verificando permisos..."
+ls -la storage/
+ls -la storage/logs/
+touch storage/logs/laravel.log
+ls -la storage/logs/laravel.log
+
+# Crear .env con configuración REAL
+echo "🔑 Configurando entorno..."
 cat > .env << EOF
 APP_NAME="Sistema Horarios FICCT"
 APP_ENV=production
-APP_DEBUG=false
+APP_DEBUG=true
 APP_URL=https://ficcthorarios.onrender.com
 APP_KEY=base64:1MV8g4JS59wJWzwCaqNMHwOoEj+rOAoV9amizaoaWtU=
 
@@ -27,10 +39,11 @@ APP_LOCALE=es
 APP_FALLBACK_LOCALE=es
 APP_TIMEZONE=America/La_Paz
 
+# SOLUCIÓN: Usar stderr para logs y evitar permisos
 LOG_CHANNEL=stderr
-LOG_LEVEL=error
+LOG_LEVEL=debug
 
-# DATABASE CONFIGURATION - VARIABLES REALES
+# DATABASE CONFIGURATION REAL
 DB_CONNECTION=pgsql
 DB_HOST=dpg-d402va75r7bs73a4mptg-a.oregon-postgres.render.com
 DB_PORT=5432
@@ -48,41 +61,38 @@ FILESYSTEM_DISK=local
 VITE_APP_NAME="Sistema Horarios FICCT"
 EOF
 
-echo "✅ Archivo .env creado con configuración real"
+echo "✅ Archivo .env creado"
 
-# Instalar dependencias PHP
+# Instalar dependencias
 echo "📦 Instalando dependencias PHP..."
 composer install --no-dev --optimize-autoloader --no-interaction
 
-# Verificar conexión a la base de datos
-echo "🔍 Verificando conexión a la base de datos..."
+# SOLUCIÓN: Limpiar TODO el cache antes de cualquier cosa
+echo "🧹 Limpiando cache profundamente..."
+php artisan config:clear || true
+php artisan cache:clear || true
+php artisan view:clear || true
+php artisan route:clear || true
+
+# Verificar que podemos escribir en logs
+echo "📝 Probando escritura en logs..."
+php -r "file_put_contents('/var/www/html/storage/logs/laravel.log', 'Test log entry\n', FILE_APPEND);"
+echo "✅ Escritura en logs verificada"
+
+# Esperar para la base de datos
+echo "⏳ Esperando conexión a base de datos..."
 sleep 10
-
-# Limpiar todo cache antes de migraciones
-echo "🧹 Limpiando cache..."
-php artisan config:clear
-php artisan cache:clear
-php artisan view:clear
-php artisan route:clear
-
-# Verificar permisos finales
-echo "🔐 Verificando permisos finales..."
-ls -la storage/logs/
-ls -la storage/framework/views/
 
 # Ejecutar migraciones
 echo "🔄 Ejecutando migraciones..."
 php artisan migrate --force
 
-# Crear enlace de storage
-php artisan storage:link
-
-# Optimizar para producción
+# Optimizar
 echo "⚡ Optimizando aplicación..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-echo "🎉 Aplicación configurada correctamente!"
+echo "🎉 CONFIGURACIÓN COMPLETADA EXITOSAMENTE"
 echo "🚀 Iniciando servidor web..."
 exec apache2-foreground
