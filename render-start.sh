@@ -2,72 +2,87 @@
 
 cd /var/www/html
 
-echo "🔧 Configurando aplicación Laravel..."
+echo "🔧 Iniciando configuración de la aplicación..."
 
-# SOLUCIÓN CRÍTICA: Configurar permisos CORRECTAMENTE
+# SOLUCIÓN DEFINITIVA PARA PERMISOS
 echo "📁 Configurando permisos de storage..."
 mkdir -p storage/framework/{sessions,views,cache}
 mkdir -p storage/logs
 mkdir -p bootstrap/cache
 
-# Permisos COMPLETOS para storage (esto resuelve el error)
+# Permisos COMPLETOS para todo storage
 chmod -R 777 storage
 chmod -R 777 bootstrap/cache
 
-# Cambiar propietario si es posible
-chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+# Configurar .env con las variables REALES de Render
+echo "🔑 Configurando variables de entorno..."
+cat > .env << EOF
+APP_NAME="Sistema Horarios FICCT"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://ficcthorarios.onrender.com
+APP_KEY=base64:1MV8g4JS59wJWzwCaqNMHwOoEj+rOAoV9amizaoaWtU=
 
-# Configurar .env si no existe
-if [ ! -f .env ]; then
-    echo "📝 Creando .env desde .env.example..."
-    cp .env.example .env
-fi
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=es
+APP_TIMEZONE=America/La_Paz
+
+LOG_CHANNEL=stderr
+LOG_LEVEL=error
+
+# DATABASE CONFIGURATION - VARIABLES REALES
+DB_CONNECTION=pgsql
+DB_HOST=dpg-d402va75r7bs73a4mptg-a.oregon-postgres.render.com
+DB_PORT=5432
+DB_DATABASE=emanuel
+DB_USERNAME=emanuel_user
+DB_PASSWORD=WOytsh6mzUqiDpRhcPmkx6ySsM52iqEN
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+
+CACHE_STORE=array
+QUEUE_CONNECTION=sync
+FILESYSTEM_DISK=local
+
+VITE_APP_NAME="Sistema Horarios FICCT"
+EOF
+
+echo "✅ Archivo .env creado con configuración real"
 
 # Instalar dependencias PHP
 echo "📦 Instalando dependencias PHP..."
 composer install --no-dev --optimize-autoloader --no-interaction
 
-# Generar APP_KEY si no existe
-if ! grep -q "APP_KEY=base64:" .env; then
-    echo "🔐 Generando APP_KEY..."
-    php artisan key:generate --force
-fi
+# Verificar conexión a la base de datos
+echo "🔍 Verificando conexión a la base de datos..."
+sleep 10
 
-# Verificar permisos de storage después de composer install
-echo "🔍 Verificando permisos..."
-ls -la storage/
-ls -la storage/framework/
-
-# Instalar y compilar assets si existen
-if [ -f package.json ]; then
-    echo "📦 Instalando dependencias Node..."
-    npm ci --silent
-    
-    echo "🔨 Compilando assets..."
-    npm run build --silent
-fi
-
-# Limpiar cache ANTES de migraciones
+# Limpiar todo cache antes de migraciones
 echo "🧹 Limpiando cache..."
 php artisan config:clear
 php artisan cache:clear
 php artisan view:clear
 php artisan route:clear
 
-# Esperar un poco para la base de datos
-echo "⏳ Esperando configuración de base de datos..."
-sleep 5
+# Verificar permisos finales
+echo "🔐 Verificando permisos finales..."
+ls -la storage/logs/
+ls -la storage/framework/views/
 
 # Ejecutar migraciones
 echo "🔄 Ejecutando migraciones..."
 php artisan migrate --force
 
-# Optimizar aplicación DESPUÉS de migraciones
+# Crear enlace de storage
+php artisan storage:link
+
+# Optimizar para producción
 echo "⚡ Optimizando aplicación..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-echo "✅ Aplicación configurada correctamente"
+echo "🎉 Aplicación configurada correctamente!"
 echo "🚀 Iniciando servidor web..."
 exec apache2-foreground
