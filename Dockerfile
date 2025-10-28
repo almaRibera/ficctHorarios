@@ -1,55 +1,30 @@
-FROM php:8.2-fpm
+FROM php:8.2-apache
 
-# Set working directory
-WORKDIR /var/www
-
-# Install system dependencies
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    libpq-dev \
-    nginx
+    libpq-dev libzip-dev zip unzip git curl \
+    libpng-dev libonig-dev libxml2-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip mbstring exif pcntl bcmath gd \
+    && a2enmod rewrite
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Instalar Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd
+# Configurar Apache para Render
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
-# Install composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Copiar aplicación
+COPY . /var/www/html
+WORKDIR /var/www/html
 
-# Copy existing application directory contents
-COPY . .
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy .env.example to .env if .env doesn't exist
-RUN if [ ! -f .env ]; then cp .env.example .env; fi
+# Script de inicio
+COPY render-start.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/render-start.sh
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader
-
-# Generate key
-RUN php artisan key:generate
-
-# Set permissions
-RUN chown -R www-data:www-data /var/www/storage
-RUN chown -R www-data:www-data /var/www/bootstrap/cache
-RUN chmod -R 775 /var/www/storage
-RUN chmod -R 775 /var/www/bootstrap/cache
-
-# Copy nginx configuration
-COPY docker/nginx.conf /etc/nginx/sites-available/default
-
-# Expose port 80
-EXPOSE 80
-
-# Start script
-COPY docker/start.sh /usr/local/bin/start.sh
-RUN chmod +x /usr/local/bin/start.sh
-
-CMD ["/usr/local/bin/start.sh"]
+CMD ["/usr/local/bin/render-start.sh"]

@@ -1,0 +1,13 @@
+/.git
+/.github
+/.vscode
+/.idea
+/docker-compose.yml
+/node_modules
+/storage/*.key
+/public/storage
+/storage/debugbar/*
+/storage/logs/*.log
+/README.md
+/tests
+/phpunit.xml
