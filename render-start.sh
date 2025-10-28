@@ -6,16 +6,10 @@ echo "🔧 INICIANDO CONFIGURACIÓN EN RENDER..."
 
 # Configurar permisos de manera segura
 echo "📁 Configurando permisos..."
-sudo chown -R www-user:www-user /var/www/html
-find /var/www/html -type f -exec chmod 644 {} \;
-find /var/www/html -type d -exec chmod 755 {} \;
+chmod -R 755 storage/
+chmod -R 755 bootstrap/cache/
 
-# Permisos específicos para storage y bootstrap
-chmod -R 775 storage/
-chmod -R 775 bootstrap/cache/
-
-# Verificar que somos el usuario correcto
-echo "👤 Usuario actual: $(whoami)"
+# Verificar permisos
 echo "📋 Permisos de storage:"
 ls -la storage/
 
@@ -69,22 +63,7 @@ php artisan route:clear
 
 # Verificar conexión a la base de datos
 echo "🔍 Verificando conexión a PostgreSQL..."
-for i in {1..30}; do
-    if php -r "
-    try {
-        \$pdo = new PDO('pgsql:host=dpg-d402va75r7bs73a4mptg-a;port=5432;dbname=emanuel', 'emanuel_user', 'WOytsh6mzUqiDpRhcPmkx6ySsM52iqEN');
-        echo '✅ Conexión a PostgreSQL exitosa';
-        exit(0);
-    } catch (Exception \$e) {
-        echo '⏳ Intento $i: Esperando PostgreSQL... ' . \$e->getMessage() . PHP_EOL;
-        exit(1);
-    }
-    "; then
-        break
-    else
-        sleep 2
-    fi
-done
+sleep 5
 
 # Ejecutar migraciones
 echo "🔄 Ejecutando migraciones..."
@@ -99,5 +78,5 @@ php artisan view:cache
 echo "🎯 CONFIGURACIÓN COMPLETADA"
 echo "🌐 Iniciando servidor web..."
 
-# Ejecutar Apache en primer plano
-exec sudo apache2-foreground
+# Ejecutar Apache en primer plano (SIN SUDO)
+exec apache2-foreground
