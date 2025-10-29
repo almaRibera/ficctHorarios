@@ -61,7 +61,7 @@
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 min-w-[200px]">
                 <h4 class="text-lg font-semibold mb-2 text-blue-800">Gestión de Usuarios</h4>
                 <p class="text-blue-600 text-sm mb-3">Administrar docentes y roles del sistema</p>
-                <a href="{{ route('admin.users.index') }}" 
+                <a href="{{ route('admin.users.index') }}"
                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg inline-block text-sm">
                     Gestionar Usuarios
                 </a>
@@ -96,7 +96,7 @@
         </div>
     </div>
 
-        <!-- Bitácora Reciente -->
+        <!-- Bitácora Reciente Actualizada -->
     <div class="bg-white rounded-lg shadow p-6 mt-6">
         <h3 class="text-xl font-semibold mb-4 text-gray-800">Actividad Reciente</h3>
         <div class="overflow-x-auto">
