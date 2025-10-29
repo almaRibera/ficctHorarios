@@ -43,7 +43,7 @@ class UserController extends Controller
             'profesion' => 'required_if:rol,docente|nullable|string|max:255',
         ]);
 
-        // Crear usuario
+        // Crear Usuarios
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -51,7 +51,7 @@ class UserController extends Controller
             'rol' => $request->rol,
         ]);
 
-        // Si es docente, crear registro en tabla docentes
+        // Si es Docente, crear registro en tabla Docentes
         if ($request->rol == 'docente') {
             Docente::create([
                 'user_id' => $user->id,
