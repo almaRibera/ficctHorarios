@@ -7,9 +7,9 @@
 
         <form action="{{ route('admin.users.store') }}" method="POST" class="bg-white rounded-lg shadow p-6">
             @csrf
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Nombre -->
+                <!-- Nombres -->
                 <div class="md:col-span-2">
                     <label for="name" class="block text-sm font-medium text-gray-700">Nombre completo</label>
                     <input type="text" name="name" id="name" value="{{ old('name') }}"
@@ -20,7 +20,7 @@
                     @enderror
                 </div>
 
-                <!-- Email -->
+                <!-- Emails -->
                 <div class="md:col-span-2">
                     <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
                     <input type="email" name="email" id="email" value="{{ old('email') }}"
@@ -53,7 +53,7 @@
                 <!-- Rol -->
                 <div>
                     <label for="rol" class="block text-sm font-medium text-gray-700">Rol</label>
-                    <select name="rol" id="rol" 
+                    <select name="rol" id="rol"
                             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                             onchange="toggleDocenteFields()">
                         <option value="admin" {{ old('rol') == 'admin' ? 'selected' : '' }}>Administrador</option>
@@ -87,11 +87,11 @@
             </div>
 
             <div class="mt-6 flex justify-end space-x-3">
-                <a href="{{ route('admin.users.index') }}" 
+                <a href="{{ route('admin.users.index') }}"
                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg">
                     Cancelar
                 </a>
-                <button type="submit" 
+                <button type="submit"
                         class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
                     Crear Usuario
                 </button>
@@ -104,7 +104,7 @@
     function toggleDocenteFields() {
         const rol = document.getElementById('rol').value;
         const docenteFields = document.getElementById('docente-fields');
-        
+
         if (rol === 'docente') {
             docenteFields.style.display = 'block';
             // Hacer campos requeridos
