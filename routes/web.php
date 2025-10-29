@@ -6,12 +6,12 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\CheckRole;
 
 
-// Rutas de autenticación
+// Rutas de autenticaciónes
 Route::get('/login', [LoginController::class, 'create'])->name('login');
 Route::post('/login', [LoginController::class, 'authenticate']);
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
-// Ruta principal
+// Rutas principales
 Route::get('/', function () {
     if (auth()->check()) {
         if (auth()->user()->rol == 'admin') {
