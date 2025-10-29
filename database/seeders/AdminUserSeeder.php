@@ -14,7 +14,7 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Crear usuario administrador
+        // Crear usuario Administrador
         User::create([
             'name' => 'Administrador',
             'email' => 'admin@gmail.com',
@@ -23,7 +23,7 @@ class AdminUserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        // Opcional: Crear un usuario docente de ejemplo
+        // Opcional: Crear un usuario docente Ejemplo
         User::create([
             'name' => 'Docente Ejemplo',
             'email' => 'docente@gmail.com',
