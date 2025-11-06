@@ -54,6 +54,10 @@
                     <a href="{{ route('admin.bitacoras.index') }}" class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded">
                         📋 Bitácora
                     </a>
+                    <a href="{{ route('admin.reportes.index') }}" 
+                    class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('admin.reportes.*') ? 'bg-blue-50 text-blue-600' : '' }}">
+                        📈 Generar Reportes
+                    </a>
                     <a href="{{ route('admin.aulas.index') }}" 
                              class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('admin.aulas.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                         🏫 Gestión de Aulas
@@ -66,9 +70,7 @@
                     class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('admin.asistencias.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                         📊 Control de Asistencias
                     </a>
-                    <a href="#" class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded">
-                        📈 Reportes
-                    </a>
+                  
                     @else
                     <a href="{{ route('docente.dashboard') }}" 
                        class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('docente.dashboard') ? 'bg-blue-50 text-blue-600' : '' }}">

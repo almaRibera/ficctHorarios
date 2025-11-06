@@ -9,7 +9,7 @@ use App\Http\Controllers\Admin\AulaController;
 use App\Http\Controllers\Admin\MateriaController;
 use App\Http\Controllers\Admin\GrupoController;
 use App\Http\Controllers\Admin\AsistenciaController;
-
+use App\Http\Controllers\Admin\ReporteController;
 
 use App\Http\Controllers\Docente\HorarioController;
 use App\Http\Controllers\Docente\AsistenciaController as DocenteAsistenciaController;
@@ -78,6 +78,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/asistencias/reporte-mensual', [AsistenciaController::class, 'reporteMensual'])->name('asistencias.reporte-mensual');
     Route::get('/asistencias/{asistencia}', [AsistenciaController::class, 'show'])->name('asistencias.show');
     Route::get('/asistencias/docente/{docente}', [AsistenciaController::class, 'porDocente'])->name('asistencias.por-docente');
+
+     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+    Route::post('/reportes/generar', [ReporteController::class, 'generar'])->name('reportes.generar');
+    Route::post('/reportes/imprimir', [ReporteController::class, 'imprimir'])->name('reportes.imprimir');
 
        // Rutas de materias
     Route::get('/materias', [MateriaController::class, 'index'])->name('materias.index');
