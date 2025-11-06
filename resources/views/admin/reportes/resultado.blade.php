@@ -137,7 +137,7 @@
                 </table>
             </div>
 
-            <!-- Materias -->
+                        <!-- Materias -->
             @elseif($tipoReporte === 'materias')
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -147,7 +147,8 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nivel</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupos</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupos Asignados</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Docentes</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -171,11 +172,14 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ $materia->grupos_materia_count }}
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ $materia->gruposMateria->unique('docente_id')->count() }}
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
-            </div>
+            </div>  
 
             <!-- Aulas -->
             @elseif($tipoReporte === 'aulas')
@@ -247,7 +251,7 @@
                                 {{ $docente->materias_asignadas_count }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $docente->horarios_count }}
+                                {{ $docente->horarios_count ?? 0 }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ $docente->created_at->format('d/m/Y') }}

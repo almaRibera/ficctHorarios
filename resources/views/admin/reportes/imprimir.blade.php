@@ -92,7 +92,32 @@
                 @endforeach
             </tbody>
         </table>
-
+        <!-- Materias -->
+        @elseif($request->tipo_reporte === 'materias')
+        <table class="break-inside-avoid">
+            <thead>
+                <tr>
+                    <th>Sigla</th>
+                    <th>Nombre</th>
+                    <th>Nivel</th>
+                    <th>Tipo</th>
+                    <th>Grupos</th>
+                    <th>Docentes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($datos as $materia)
+                <tr>
+                    <td>{{ $materia->sigla }}</td>
+                    <td>{{ $materia->nombre }}</td>
+                    <td>Nivel {{ $materia->nivel }}</td>
+                    <td>{{ $materia->tipo_completo }}</td>
+                    <td>{{ $materia->grupos_materia_count }}</td>
+                    <td>{{ $materia->gruposMateria->unique('docente_id')->count() }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
         <!-- Bitácora -->
         @elseif($request->tipo_reporte === 'bitacora')
         <table class="break-inside-avoid">

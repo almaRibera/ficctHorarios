@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class GrupoMateria extends Model
 {
@@ -39,13 +38,27 @@ class GrupoMateria extends Model
         return $this->hasMany(HorarioDocente::class, 'grupo_materia_id');
     }
 
+    // Calcular horas asignadas
     public function horasAsignadas()
     {
-        return $this->horarios()->sum(DB::raw('EXTRACT(EPOCH FROM (hora_fin - hora_inicio))')) / 3600;
+        $totalSegundos = 0;
+        foreach ($this->horarios as $horario) {
+            $inicio = \Carbon\Carbon::parse($horario->hora_inicio);
+            $fin = \Carbon\Carbon::parse($horario->hora_fin);
+            $totalSegundos += $fin->diffInSeconds($inicio);
+        }
+        return $totalSegundos / 3600; // Convertir a horas
     }
 
+    // Calcular horas pendientes
     public function horasPendientes()
     {
         return $this->horas_semanales - $this->horasAsignadas();
+    }
+
+    // Verificar si tiene horarios completos
+    public function tieneHorariosCompletos()
+    {
+        return $this->horasPendientes() <= 0;
     }
 }

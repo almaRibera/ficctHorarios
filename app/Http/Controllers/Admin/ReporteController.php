@@ -130,10 +130,14 @@ class ReporteController extends Controller
     /**
      * Obtener datos para reporte de materias
      */
-    private function obtenerDatosMaterias()
+        private function obtenerDatosMaterias()
     {
-        return Materia::withCount(['gruposMateria'])->latest()->get();
+        return Materia::withCount(['gruposMateria'])
+            ->with(['gruposMateria.grupo', 'gruposMateria.docente'])
+            ->latest()
+            ->get();
     }
+
 
     /**
      * Obtener datos para reporte de aulas
@@ -146,18 +150,30 @@ class ReporteController extends Controller
     /**
      * Obtener datos para reporte de docentes
      */
-    private function obtenerDatosDocentes()
+      private function obtenerDatosDocentes()
     {
         return User::where('rol', 'docente')
-            ->withCount(['materiasAsignadas', 'horarios'])
+            ->withCount(['materiasAsignadas'])
+            ->with(['materiasAsignadas.grupo', 'materiasAsignadas.materia'])
             ->latest()
-            ->get();
+            ->get()
+            ->map(function ($docente) {
+                // Calcular cantidad de horarios manualmente
+                $horariosCount = 0;
+                foreach ($docente->materiasAsignadas as $materiaAsignada) {
+                    $horariosCount += $materiaAsignada->horarios->count();
+                }
+                
+                $docente->horarios_count = $horariosCount;
+                return $docente;
+            });
     }
+
 
     /**
      * Obtener datos para reporte de grupos
      */
-    private function obtenerDatosGrupos()
+     private function obtenerDatosGrupos()
     {
         return Grupo::withCount(['materiasAsignadas'])
             ->with(['materiasAsignadas.materia', 'materiasAsignadas.docente'])

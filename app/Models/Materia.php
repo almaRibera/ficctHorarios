@@ -20,6 +20,26 @@ class Materia extends Model
         'nivel' => 'integer',
     ];
 
+    // Relación con grupos_materia (tabla pivote)
+    public function gruposMateria()
+    {
+        return $this->hasMany(GrupoMateria::class);
+    }
+
+    // Relación con grupos a través de la tabla pivote
+    public function grupos()
+    {
+        return $this->belongsToMany(Grupo::class, 'grupo_materia', 'materia_id', 'grupo_id')
+                    ->withTimestamps();
+    }
+
+    // Relación con docentes a través de la tabla pivote
+    public function docentes()
+    {
+        return $this->belongsToMany(User::class, 'grupo_materia', 'materia_id', 'docente_id')
+                    ->withTimestamps();
+    }
+
     // Scope para materias por nivel
     public function scopeNivel($query, $nivel)
     {
@@ -36,5 +56,17 @@ class Materia extends Model
     public function getTipoCompletoAttribute()
     {
         return $this->tipo === 'truncal' ? 'Troncal' : 'Electiva';
+    }
+
+    // Contar cantidad de grupos asignados
+    public function getCantidadGruposAttribute()
+    {
+        return $this->gruposMateria->count();
+    }
+
+    // Contar cantidad de docentes asignados
+    public function getCantidadDocentesAttribute()
+    {
+        return $this->gruposMateria->unique('docente_id')->count();
     }
 }
