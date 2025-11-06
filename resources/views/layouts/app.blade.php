@@ -47,6 +47,7 @@
                     class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('admin.materias.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                         📚 Gestión de Materias
                     </a>
+
                     <a href="{{ route('admin.users.index') }}"  class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded">
                         👥 Gestión de Usuarios
                     </a>
@@ -61,6 +62,10 @@
                         class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('admin.grupos.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                             👥 Gestión de Grupos
                     </a>
+                    <a href="{{ route('admin.asistencias.index') }}" 
+                    class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('admin.asistencias.*') ? 'bg-blue-50 text-blue-600' : '' }}">
+                        📊 Control de Asistencias
+                    </a>
                     <a href="#" class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded">
                         📈 Reportes
                     </a>
@@ -69,11 +74,12 @@
                        class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('docente.dashboard') ? 'bg-blue-50 text-blue-600' : '' }}">
                         📅 Mi Dashboard
                     </a>
-                   <a href="{{ route('docente.horarios.index') }}" 
+                  <a href="{{ route('docente.horarios.index') }}" 
                     class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('docente.horarios.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                         📅 Mis Horarios
                     </a>
-                    <a href="#" class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded">
+                    <a href="{{ route('docente.asistencia.index') }}" 
+                    class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('docente.asistencia.*') ? 'bg-blue-50 text-blue-600' : '' }}">
                         ✅ Registrar Asistencia
                     </a>
 

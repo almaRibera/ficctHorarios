@@ -8,8 +8,12 @@ use App\Http\Middleware\CheckRole;
 use App\Http\Controllers\Admin\AulaController;
 use App\Http\Controllers\Admin\MateriaController;
 use App\Http\Controllers\Admin\GrupoController;
+use App\Http\Controllers\Admin\AsistenciaController;
 
-use App\Http\Controllers\Docente\HorarioController as HorarioController;
+
+use App\Http\Controllers\Docente\HorarioController;
+use App\Http\Controllers\Docente\AsistenciaController as DocenteAsistenciaController;
+
 
 // Rutas de autenticación
 Route::get('/login', [LoginController::class, 'create'])->name('login');
@@ -34,12 +38,22 @@ Route::middleware(['auth'])->group(function () {
         return view('admin.dashboard');
     })->name('admin.dashboard')->middleware('role:admin');
 
-    // Rutas para docente - horarios
+    // Rutas para docente - horarios-----------------------
     Route::middleware(['auth', 'role:docente'])->prefix('docente')->name('docente.')->group(function () {
         Route::get('/horarios', [HorarioController::class, 'index'])->name('horarios.index');
         Route::get('/horarios/{grupoMateria}/create', [HorarioController::class, 'create'])->name('horarios.create');
         Route::post('/horarios/{grupoMateria}', [HorarioController::class, 'store'])->name('horarios.store');
         Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->name('horarios.destroy');
+ 
+           Route::get('/asistencia', [DocenteAsistenciaController::class, 'index'])->name('asistencia.index');
+            Route::get('/asistencia/{horario}/create', [DocenteAsistenciaController::class, 'create'])->name('asistencia.create');
+            Route::post('/asistencia/{horario}', [DocenteAsistenciaController::class, 'store'])->name('asistencia.store');
+            Route::get('/asistencia/{asistencia}', [DocenteAsistenciaController::class, 'show'])->name('asistencia.show');
+        
+ 
+ 
+ 
+ 
     });
 
     // Dashboard docente
@@ -59,6 +73,11 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/grupos/{grupo}', [GrupoController::class, 'destroy'])->name('grupos.destroy');
     Route::post('/grupos/{grupo}/asignar-materia', [GrupoController::class, 'asignarMateria'])->name('grupos.asignar-materia');
     Route::delete('/grupo-materia/{grupoMateria}', [GrupoController::class, 'eliminarMateria'])->name('grupos.eliminar-materia');
+
+    Route::get('/asistencias', [AsistenciaController::class, 'index'])->name('asistencias.index');
+    Route::get('/asistencias/reporte-mensual', [AsistenciaController::class, 'reporteMensual'])->name('asistencias.reporte-mensual');
+    Route::get('/asistencias/{asistencia}', [AsistenciaController::class, 'show'])->name('asistencias.show');
+    Route::get('/asistencias/docente/{docente}', [AsistenciaController::class, 'porDocente'])->name('asistencias.por-docente');
 
        // Rutas de materias
     Route::get('/materias', [MateriaController::class, 'index'])->name('materias.index');
