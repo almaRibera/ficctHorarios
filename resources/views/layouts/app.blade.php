@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <!-- Navbar integrado -->
+    <!-- Navbar Integrado -->
     <nav class="bg-blue-600 text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -30,7 +30,7 @@
         </div>
     </nav>
 
-    <!-- Sidebar y contenido principal -->
+    <!-- Sidebar y contenidos principales -->
     <div class="flex">
         <!-- Sidebar integrado -->
         @auth
@@ -39,7 +39,7 @@
                 <h2 class="text-lg font-semibold text-gray-700">Menú Principal</h2>
                 <nav class="mt-4 space-y-2">
                     @if(auth()->user()->rol == 'admin')
-                    <a href="{{ route('admin.dashboard') }}" 
+                    <a href="{{ route('admin.dashboard') }}"
                        class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('admin.dashboard') ? 'bg-blue-50 text-blue-600' : '' }}">
                         📊 Dashboard Admin
                     </a>
@@ -72,7 +72,7 @@
                     </a>
                   
                     @else
-                    <a href="{{ route('docente.dashboard') }}" 
+                    <a href="{{ route('docente.dashboard') }}"
                        class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('docente.dashboard') ? 'bg-blue-50 text-blue-600' : '' }}">
                         📅 Mi Dashboard
                     </a>

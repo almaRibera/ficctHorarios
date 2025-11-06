@@ -31,7 +31,7 @@ class LoginController extends Controller
                 'fecha_y_hora' => now(),
             ]);
 
-            // Redirección según rol
+            // Redirección según Roles
             return $this->authenticated($request, auth()->user());
         }
 
@@ -64,7 +64,7 @@ class LoginController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        // Registrar cierre de sesión en bitácora
+        // Registrar Cierre de Sesión en bitácora
         if (auth()->check()) {
             Bitacora::create([
                 'user_id' => auth()->id(),

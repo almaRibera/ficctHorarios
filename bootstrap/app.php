@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 
-        // Registrar middleware personalizado
+        // Registrar Middleware Personalizado
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
