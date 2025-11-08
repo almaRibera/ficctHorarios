@@ -64,7 +64,11 @@ Route::middleware(['auth'])->group(function () {
     // Rutas de gestión de usuarios (solo admin)
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class);
-        
+           // Reportes
+        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+        Route::post('/reportes/generar', [ReporteController::class, 'generar'])->name('reportes.generar');
+        Route::post('/reportes/imprimir', [ReporteController::class, 'imprimir'])->name('reportes.imprimir');
+
         // Rutas de grupos
      Route::get('/grupos', [GrupoController::class, 'index'])->name('grupos.index');
     Route::get('/grupos/create', [GrupoController::class, 'create'])->name('grupos.create');
@@ -78,12 +82,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/asistencias/reporte-mensual', [AsistenciaController::class, 'reporteMensual'])->name('asistencias.reporte-mensual');
     Route::get('/asistencias/{asistencia}', [AsistenciaController::class, 'show'])->name('asistencias.show');
     Route::get('/asistencias/docente/{docente}', [AsistenciaController::class, 'porDocente'])->name('asistencias.por-docente');
-
-     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-    Route::post('/reportes/generar', [ReporteController::class, 'generar'])->name('reportes.generar');
-    Route::post('/reportes/imprimir', [ReporteController::class, 'imprimir'])->name('reportes.imprimir');
-
-       // Rutas de materias
+     // Rutas de materias
     Route::get('/materias', [MateriaController::class, 'index'])->name('materias.index');
     Route::get('/materias/create', [MateriaController::class, 'create'])->name('materias.create');
     Route::post('/materias', [MateriaController::class, 'store'])->name('materias.store');

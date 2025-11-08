@@ -12,6 +12,8 @@ use App\Models\Grupo;
 use App\Models\GrupoMateria;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReporteController extends Controller
 {
@@ -83,7 +85,7 @@ class ReporteController extends Controller
                 return $this->obtenerDatosGrupos();
             
             default:
-                return [];
+                return collect();
         }
     }
 
@@ -106,7 +108,7 @@ class ReporteController extends Controller
             $query->where('docente_id', $docenteId);
         }
 
-        return $query->latest()->get();
+        return $query->orderBy('fecha', 'desc')->get();
     }
 
     /**
@@ -124,41 +126,39 @@ class ReporteController extends Controller
             $query->where('fecha_y_hora', '<=', $fechaFin . ' 23:59:59');
         }
 
-        return $query->latest()->get();
+        return $query->orderBy('fecha_y_hora', 'desc')->get();
     }
 
     /**
      * Obtener datos para reporte de materias
      */
-        private function obtenerDatosMaterias()
+    private function obtenerDatosMaterias()
     {
         return Materia::withCount(['gruposMateria'])
             ->with(['gruposMateria.grupo', 'gruposMateria.docente'])
-            ->latest()
+            ->orderBy('sigla')
             ->get();
     }
-
 
     /**
      * Obtener datos para reporte de aulas
      */
     private function obtenerDatosAulas()
     {
-        return Aula::latest()->get();
+        return Aula::orderBy('nombre')->get();
     }
 
     /**
      * Obtener datos para reporte de docentes
      */
-      private function obtenerDatosDocentes()
+    private function obtenerDatosDocentes()
     {
         return User::where('rol', 'docente')
             ->withCount(['materiasAsignadas'])
             ->with(['materiasAsignadas.grupo', 'materiasAsignadas.materia'])
-            ->latest()
+            ->orderBy('name')
             ->get()
             ->map(function ($docente) {
-                // Calcular cantidad de horarios manualmente
                 $horariosCount = 0;
                 foreach ($docente->materiasAsignadas as $materiaAsignada) {
                     $horariosCount += $materiaAsignada->horarios->count();
@@ -169,15 +169,14 @@ class ReporteController extends Controller
             });
     }
 
-
     /**
      * Obtener datos para reporte de grupos
      */
-     private function obtenerDatosGrupos()
+    private function obtenerDatosGrupos()
     {
         return Grupo::withCount(['materiasAsignadas'])
             ->with(['materiasAsignadas.materia', 'materiasAsignadas.docente'])
-            ->latest()
+            ->orderBy('sigla_grupo')
             ->get();
     }
 
@@ -213,9 +212,44 @@ class ReporteController extends Controller
      */
     private function exportarExcel($tipo, $datos, $titulo)
     {
-        // Para implementación completa necesitaríamos crear Export classes
-        // Por ahora redirigimos a HTML
-        return back()->with('info', 'La exportación a Excel estará disponible pronto.');
+        try {
+            return $this->exportarExcelSimple($tipo, $datos, $titulo);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al generar Excel: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Exportación simple a Excel
+     */
+    private function exportarExcelSimple($tipo, $datos, $titulo)
+    {
+        $fileName = $this->generarNombreArchivo($tipo, 'xlsx');
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $fileName . '"');
+        header('Cache-Control: max-age=0');
+
+        $fp = fopen('php://output', 'w');
+        
+        // Escribir encabezados
+        fputcsv($fp, [$titulo], "\t");
+        fputcsv($fp, ['Generado el: ' . now()->format('d/m/Y H:i')], "\t");
+        fputcsv($fp, ['Generado por: ' . auth()->user()->name], "\t");
+        fputcsv($fp, [], "\t"); // Línea vacía
+
+        // Escribir headers de columnas
+        $headers = $this->obtenerHeadersExcel($tipo);
+        fputcsv($fp, $headers, "\t");
+
+        // Escribir datos
+        foreach ($datos as $item) {
+            $row = $this->formatearFilaExcel($tipo, $item);
+            fputcsv($fp, $row, "\t");
+        }
+
+        fclose($fp);
+        exit;
     }
 
     /**
@@ -223,9 +257,137 @@ class ReporteController extends Controller
      */
     private function exportarPDF($tipo, $datos, $titulo)
     {
-        // Para implementación completa necesitaríamos crear PDF views
-        // Por ahora redirigimos a HTML
-        return back()->with('info', 'La exportación a PDF estará disponible pronto.');
+        try {
+            $pdf = PDF::loadView('admin.reportes.pdf', [
+                'datos' => $datos,
+                'titulo' => $titulo,
+                'tipoReporte' => $tipo
+            ])->setPaper('a4', 'landscape');
+
+            $fileName = $this->generarNombreArchivo($tipo, 'pdf');
+            return $pdf->download($fileName);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al generar PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generar nombre de archivo
+     */
+    private function generarNombreArchivo($tipo, $extension)
+    {
+        $nombres = [
+            'asistencias' => 'reporte_asistencias',
+            'bitacora' => 'reporte_bitacora',
+            'materias' => 'reporte_materias',
+            'aulas' => 'reporte_aulas',
+            'docentes' => 'reporte_docentes',
+            'grupos' => 'reporte_grupos',
+        ];
+
+        $nombreBase = $nombres[$tipo] ?? 'reporte';
+        $fecha = now()->format('Y-m-d_H-i');
+        
+        return "{$nombreBase}_{$fecha}.{$extension}";
+    }
+
+    /**
+     * Obtener headers para Excel
+     */
+    private function obtenerHeadersExcel($tipo)
+    {
+        switch ($tipo) {
+            case 'asistencias':
+                return ['Fecha', 'Docente', 'Email Docente', 'Materia', 'Grupo', 'Aula', 'Horario', 'Registro', 'Estado'];
+            
+            case 'bitacora':
+                return ['Fecha/Hora', 'Usuario', 'Email Usuario', 'Acción Realizada'];
+            
+            case 'materias':
+                return ['Sigla', 'Nombre', 'Nivel', 'Tipo', 'Grupos Asignados', 'Docentes'];
+            
+            case 'aulas':
+                return ['Nombre', 'Piso', 'Tipo', 'Estado', 'Capacidad'];
+            
+            case 'docentes':
+                return ['Nombre', 'Email', 'Materias Asignadas', 'Horarios', 'Fecha Registro'];
+            
+            case 'grupos':
+                return ['Sigla', 'Código', 'Materias', 'Docentes', 'Fecha Registro'];
+            
+            default:
+                return ['Datos'];
+        }
+    }
+
+    /**
+     * Formatear fila para Excel
+     */
+    private function formatearFilaExcel($tipo, $item)
+    {
+        switch ($tipo) {
+            case 'asistencias':
+                return [
+                    $item->fecha->format('d/m/Y'),
+                    $item->docente->name,
+                    $item->docente->email,
+                    $item->horario->grupoMateria->materia->sigla,
+                    $item->horario->grupoMateria->grupo->sigla_grupo,
+                    $item->horario->aula->nombre,
+                    $item->horario->hora_inicio->format('H:i') . '-' . $item->horario->hora_fin->format('H:i'),
+                    $item->hora_registro,
+                    $item->estado == 'presente' ? 'Presente' : 'Tardanza'
+                ];
+            
+            case 'bitacora':
+                return [
+                    $item->fecha_y_hora->format('d/m/Y H:i'),
+                    $item->user->name,
+                    $item->user->email,
+                    $item->accion_realizada
+                ];
+            
+            case 'materias':
+                return [
+                    $item->sigla,
+                    $item->nombre,
+                    'Nivel ' . $item->nivel,
+                    $item->tipo_completo,
+                    $item->grupos_materia_count,
+                    $item->gruposMateria->unique('docente_id')->count()
+                ];
+            
+            case 'aulas':
+                return [
+                    $item->nombre,
+                    'Piso ' . $item->piso,
+                    $item->tipo_completo,
+                    $item->estado_texto,
+                    $item->capacidad ?? 'N/A'
+                ];
+            
+            case 'docentes':
+                return [
+                    $item->name,
+                    $item->email,
+                    $item->materias_asignadas_count,
+                    $item->horarios_count,
+                    $item->created_at->format('d/m/Y')
+                ];
+            
+            case 'grupos':
+                return [
+                    $item->sigla_grupo,
+                    $item->codigo_grupo,
+                    $item->materias_asignadas_count,
+                    $item->materiasAsignadas->unique('docente_id')->count(),
+                    $item->created_at->format('d/m/Y')
+                ];
+            
+            default:
+                return [json_encode($item)];
+        }
     }
 
     /**

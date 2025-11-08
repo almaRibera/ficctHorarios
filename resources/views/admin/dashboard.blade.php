@@ -53,48 +53,7 @@
         </div>
     </div>
 
-    <!-- Acciones Rápidas -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-xl font-semibold mb-4 text-gray-800">Acciones Rápidas</h3>
-        <div class="flex flex-wrap gap-4">
-            <!-- Gestión de Usuarios -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 min-w-[200px]">
-                <h4 class="text-lg font-semibold mb-2 text-blue-800">Gestión de Usuarios</h4>
-                <p class="text-blue-600 text-sm mb-3">Administrar docentes y roles del sistema</p>
-                <a href="{{ route('admin.users.index') }}"
-                   class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg inline-block text-sm">
-                    Gestionar Usuarios
-                </a>
-            </div>
-
-            <!-- Gestión de Materias -->
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 min-w-[200px]">
-                <h4 class="text-lg font-semibold mb-2 text-green-800">Gestión de Materias</h4>
-                <p class="text-green-600 text-sm mb-3">Administrar materias y planes de estudio</p>
-                <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex items-center">
-                    <span class="mr-2">📚</span> Gestionar Materias
-                </button>
-            </div>
-
-            <!-- Generar Horarios -->
-            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 min-w-[200px]">
-                <h4 class="text-lg font-semibold mb-2 text-purple-800">Generar Horarios</h4>
-                <p class="text-purple-600 text-sm mb-3">Crear y optimizar horarios automáticamente</p>
-                <button class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm flex items-center">
-                    <span class="mr-2">🕐</span> Generar Horarios
-                </button>
-            </div>
-
-            <!-- Reportes -->
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4 min-w-[200px]">
-                <h4 class="text-lg font-semibold mb-2 text-red-800">Reportes</h4>
-                <p class="text-red-600 text-sm mb-3">Generar reportes y estadísticas</p>
-                <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm flex items-center">
-                    <span class="mr-2">📊</span> Ver Reportes
-                </button>
-            </div>
-        </div>
-    </div>
+  
 
         <!-- Bitácora Reciente Actualizada -->
     <div class="bg-white rounded-lg shadow p-6 mt-6">

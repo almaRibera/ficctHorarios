@@ -8,6 +8,7 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">{{ $titulo }}</h1>
                 <p class="text-gray-600">Generado el: {{ now()->format('d/m/Y H:i') }}</p>
+                <p class="text-gray-600">Formato: {{ strtoupper($formato) }}</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="window.print()" 
@@ -137,7 +138,7 @@
                 </table>
             </div>
 
-                        <!-- Materias -->
+            <!-- Materias -->
             @elseif($tipoReporte === 'materias')
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">

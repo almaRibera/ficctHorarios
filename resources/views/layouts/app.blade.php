@@ -85,9 +85,7 @@
                         ✅ Registrar Asistencia
                     </a>
 
-                    <a href="#" class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded">
-                        📚 Mis Materias
-                    </a>
+                   
                     @endif
                 </nav>
             </div>
