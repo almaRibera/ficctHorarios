@@ -68,7 +68,7 @@
                     </a>
                     <a href="{{ route('admin.asistencias.index') }}" 
                     class="block py-2 px-4 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded {{ request()->routeIs('admin.asistencias.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                        📊 Control de Asistencias
+                        📊 Reporte Asistencias
                     </a>
                   
                     @else

@@ -12,14 +12,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('horario_docente_id')->constrained()->onDelete('cascade');
             $table->foreignId('docente_id')->constrained('users')->onDelete('cascade');
-            $table->date('fecha');
+            $table->date('fecha_clase');
             $table->time('hora_registro');
             $table->enum('estado', ['presente', 'tardanza', 'falta'])->default('presente');
-            $table->string('foto_evidencia')->nullable();
             $table->text('observaciones')->nullable();
             $table->timestamps();
             
-            $table->unique(['horario_docente_id', 'fecha']);
+            $table->unique(['horario_docente_id', 'fecha_clase']);
         });
     }
 

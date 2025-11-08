@@ -12,97 +12,107 @@ use Carbon\Carbon;
 class AsistenciaController extends Controller
 {
     /**
-     * Mostrar reporte de asistencias
+     * Mostrar reporte general de asistencias
      */
     public function index(Request $request)
     {
+        $fecha = $request->get('fecha', Carbon::today()->format('Y-m-d'));
+        $docenteId = $request->get('docente_id');
+        
         $query = Asistencia::with(['docente', 'horario.grupoMateria.materia', 'horario.grupoMateria.grupo', 'horario.aula']);
         
-        // Filtros
-        if ($request->filled('docente_id')) {
-            $query->where('docente_id', $request->docente_id);
+        if ($fecha) {
+            $query->where('fecha_clase', $fecha);
         }
         
-        if ($request->filled('fecha')) {
-            $query->where('fecha', $request->fecha);
-        } else {
-            $query->where('fecha', today());
+        if ($docenteId) {
+            $query->where('docente_id', $docenteId);
         }
         
-        if ($request->filled('estado')) {
-            $query->where('estado', $request->estado);
-        }
-
         $asistencias = $query->latest()->paginate(20);
         $docentes = User::where('rol', 'docente')->get();
 
-        return view('admin.asistencias.index', compact('asistencias', 'docentes'));
-    }
-
-    /**
-     * Mostrar reporte por docente
-     */
-    public function porDocente(Request $request, User $docente)
-    {
-        $query = Asistencia::with(['horario.grupoMateria.materia', 'horario.grupoMateria.grupo', 'horario.aula'])
-            ->where('docente_id', $docente->id);
-        
-        // Filtros por fecha
-        if ($request->filled('fecha_inicio')) {
-            $query->where('fecha', '>=', $request->fecha_inicio);
-        }
-        
-        if ($request->filled('fecha_fin')) {
-            $query->where('fecha', '<=', $request->fecha_fin);
-        }
-
-        $asistencias = $query->latest()->paginate(20);
-        
         // Estadísticas
         $totalAsistencias = $asistencias->total();
         $presentes = $asistencias->where('estado', 'presente')->count();
         $tardanzas = $asistencias->where('estado', 'tardanza')->count();
-        $faltas = $totalAsistencias - ($presentes + $tardanzas); // Asumiendo que no registró = falta
+        $faltas = $totalAsistencias - $presentes - $tardanzas;
 
-        return view('admin.asistencias.por-docente', compact('asistencias', 'docente', 'presentes', 'tardanzas', 'faltas'));
+        return view('admin.asistencias.index', compact(
+            'asistencias', 
+            'docentes', 
+            'fecha', 
+            'docenteId',
+            'totalAsistencias',
+            'presentes',
+            'tardanzas',
+            'faltas'
+        ));
     }
 
     /**
-     * Ver detalle de asistencia
+     * Mostrar asistencias por docente
+     */
+    public function porDocente(Request $request, User $docente = null)
+    {
+        $docentes = User::where('rol', 'docente')->get();
+        
+        if (!$docente && $docentes->count() > 0) {
+            $docente = $docentes->first();
+        }
+        
+        $fechaInicio = $request->get('fecha_inicio', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $fechaFin = $request->get('fecha_fin', Carbon::today()->format('Y-m-d'));
+        
+        if ($docente) {
+            $asistencias = Asistencia::with(['horario.grupoMateria.materia', 'horario.grupoMateria.grupo', 'horario.aula'])
+                ->where('docente_id', $docente->id)
+                ->whereBetween('fecha_clase', [$fechaInicio, $fechaFin])
+                ->latest()
+                ->paginate(20);
+
+            // Estadísticas del docente
+            $totalClases = HorarioDocente::whereHas('grupoMateria', function($query) use ($docente) {
+                $query->where('docente_id', $docente->id);
+            })->count();
+
+            $totalAsistencias = $asistencias->count();
+            $presentes = $asistencias->where('estado', 'presente')->count();
+            $tardanzas = $asistencias->where('estado', 'tardanza')->count();
+            $faltas = $totalClases - $totalAsistencias;
+
+            $porcentajeAsistencia = $totalClases > 0 ? ($totalAsistencias / $totalClases) * 100 : 0;
+        } else {
+            $asistencias = collect();
+            $totalClases = 0;
+            $totalAsistencias = 0;
+            $presentes = 0;
+            $tardanzas = 0;
+            $faltas = 0;
+            $porcentajeAsistencia = 0;
+        }
+
+        return view('admin.asistencias.por-docente', compact(
+            'docentes',
+            'docente',
+            'asistencias',
+            'fechaInicio',
+            'fechaFin',
+            'totalClases',
+            'totalAsistencias',
+            'presentes',
+            'tardanzas',
+            'faltas',
+            'porcentajeAsistencia'
+        ));
+    }
+
+    /**
+     * Mostrar detalle de una asistencia
      */
     public function show(Asistencia $asistencia)
     {
         $asistencia->load(['docente', 'horario.grupoMateria.materia', 'horario.grupoMateria.grupo', 'horario.aula']);
         return view('admin.asistencias.show', compact('asistencia'));
-    }
-
-    /**
-     * Reporte mensual de asistencias
-     */
-    public function reporteMensual(Request $request)
-    {
-        $mes = $request->get('mes', now()->month);
-        $anio = $request->get('anio', now()->year);
-        
-        $docentes = User::where('rol', 'docente')->get();
-        $reporte = [];
-
-        foreach ($docentes as $docente) {
-            $asistencias = Asistencia::where('docente_id', $docente->id)
-                ->whereYear('fecha', $anio)
-                ->whereMonth('fecha', $mes)
-                ->get();
-
-            $reporte[] = [
-                'docente' => $docente,
-                'total_clases' => $asistencias->count(),
-                'presentes' => $asistencias->where('estado', 'presente')->count(),
-                'tardanzas' => $asistencias->where('estado', 'tardanza')->count(),
-                'porcentaje_asistencia' => $asistencias->count() > 0 ? 
-                    (($asistencias->where('estado', 'presente')->count() / $asistencias->count()) * 100) : 0
-            ];
-        }
-
-        return view('admin.asistencias.reporte-mensual', compact('reporte', 'mes', 'anio'));
     }
 }

@@ -12,15 +12,14 @@ class Asistencia extends Model
     protected $fillable = [
         'horario_docente_id',
         'docente_id',
-        'fecha',
+        'fecha_clase',
         'hora_registro',
         'estado',
-        'foto_evidencia',
         'observaciones'
     ];
 
     protected $casts = [
-        'fecha' => 'date',
+        'fecha_clase' => 'date',
         'hora_registro' => 'datetime:H:i',
     ];
 
@@ -34,17 +33,15 @@ class Asistencia extends Model
         return $this->belongsTo(User::class, 'docente_id');
     }
 
-    // Scope para asistencias de hoy
-    public function scopeHoy($query)
+    // Scope para asistencias de un docente
+    public function scopeDocente($query, $docenteId)
     {
-        return $query->where('fecha', today());
+        return $query->where('docente_id', $docenteId);
     }
 
-    // Verificar si ya se registró asistencia para este horario hoy
-    public static function yaRegistrado($horarioDocenteId)
+    // Scope para asistencias por fecha
+    public function scopeFecha($query, $fecha)
     {
-        return static::where('horario_docente_id', $horarioDocenteId)
-            ->where('fecha', today())
-            ->exists();
+        return $query->where('fecha_clase', $fecha);
     }
 }
