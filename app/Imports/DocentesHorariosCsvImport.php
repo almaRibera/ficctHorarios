@@ -140,88 +140,88 @@ class DocentesHorariosCsvImport
         return $user;
     }
 
-    private function processGrupoMateriaHorario($row, $user)
-    {
-        // Buscar o crear grupo
-        $grupo = Grupo::firstOrCreate(
-            ['codigo_grupo' => $row['codigo_grupo']],
+  private function processGrupoMateriaHorario($row, $user)
+{
+    // Buscar o crear grupo
+    $grupo = Grupo::firstOrCreate(
+        ['codigo_grupo' => $row['codigo_grupo']],
+        [
+            'sigla_grupo' => $row['sigla_grupo'],
+        ]
+    );
+
+    // Buscar o crear materia
+    $materia = Materia::firstOrCreate(
+        ['sigla' => $row['sigla_materia']],
+        [
+            'nombre' => $row['nombre_materia'],
+            'nivel' => $row['nivel'],
+            'tipo' => $row['tipo_materia'] ?? 'truncal',
+        ]
+    );
+
+    // Buscar o crear aula (solo si es presencial y se proporciona aula)
+    $aula = null;
+    if ($row['modalidad'] === 'presencial' && !empty($row['nombre_aula'])) {
+        $aula = Aula::firstOrCreate(
+            ['nombre' => $row['nombre_aula']],
             [
-                'sigla_grupo' => $row['sigla_grupo'],
+                'piso' => $row['piso_aula'] ?? '1',
+                'tipo' => $row['tipo_aula'] ?? 'teorica',
+                'capacidad' => $row['capacidad_aula'] ?? 40,
+                'estado' => 'disponible'
             ]
         );
-
-        // Buscar o crear materia
-        $materia = Materia::firstOrCreate(
-            ['sigla' => $row['sigla_materia']],
-            [
-                'nombre' => $row['nombre_materia'],
-                'nivel' => $row['nivel'],
-                'tipo' => $row['tipo_materia'] ?? 'truncal',
-            ]
-        );
-
-        // Buscar o crear aula (solo si es presencial)
-        $aula = null;
-        if ($row['modalidad'] === 'presencial' && !empty($row['nombre_aula'])) {
-            $aula = Aula::firstOrCreate(
-                ['nombre' => $row['nombre_aula']],
-                [
-                    'piso' => $row['piso_aula'] ?? '1',
-                    'tipo' => $row['tipo_aula'] ?? 'teorica',
-                    'capacidad' => $row['capacidad_aula'] ?? 40,
-                    'estado' => 'disponible'
-                ]
-            );
-        }
-
-        // Crear o actualizar grupo_materia
-        $grupoMateria = GrupoMateria::updateOrCreate(
-            [
-                'grupo_id' => $grupo->id,
-                'materia_id' => $materia->id,
-            ],
-            [
-                'docente_id' => $user->id,
-                'horas_semanales' => $row['horas_semanales'] ?? 4,
-            ]
-        );
-
-        // Verificar conflicto de horario antes de crear (solo para presencial)
-        if ($row['modalidad'] === 'presencial' && $aula) {
-            if ($this->tieneConflictoHorario($aula->id, $row['dia'], $row['hora_inicio'], $row['hora_fin'])) {
-                throw new \Exception("Conflicto de horario en el aula {$row['nombre_aula']} para el día {$row['dia']} de {$row['hora_inicio']} a {$row['hora_fin']}");
-            }
-        }
-
-        // Verificar conflicto de docente
-        if ($this->tieneConflictoDocente($user->id, $row['dia'], $row['hora_inicio'], $row['hora_fin'])) {
-            throw new \Exception("El docente ya tiene una clase asignada en el día {$row['dia']} de {$row['hora_inicio']} a {$row['hora_fin']}");
-        }
-
-        // Preparar datos para crear el horario
-        $horarioData = [
-            'grupo_materia_id' => $grupoMateria->id,
-            'dia' => $row['dia'],
-            'hora_inicio' => $row['hora_inicio'],
-            'hora_fin' => $row['hora_fin'],
-            'modalidad' => $row['modalidad'],
-        ];
-
-        // Asignar aula_id solo si es presencial y existe aula
-        if ($row['modalidad'] === 'presencial' && $aula) {
-            $horarioData['aula_id'] = $aula->id;
-        } else {
-            $horarioData['aula_id'] = null;
-        }
-
-        // Agregar enlace virtual si es virtual y se proporcionó
-        if ($row['modalidad'] === 'virtual' && !empty($row['enlace_virtual'])) {
-            $horarioData['enlace_virtual'] = $row['enlace_virtual'];
-        }
-
-        // Crear horario docente
-        HorarioDocente::create($horarioData);
     }
+
+    // Crear o actualizar grupo_materia
+    $grupoMateria = GrupoMateria::updateOrCreate(
+        [
+            'grupo_id' => $grupo->id,
+            'materia_id' => $materia->id,
+        ],
+        [
+            'docente_id' => $user->id,
+            'horas_semanales' => $row['horas_semanales'] ?? 4,
+        ]
+    );
+
+    // Verificar conflicto de horario antes de crear (solo para presencial con aula)
+    if ($row['modalidad'] === 'presencial' && $aula) {
+        if ($this->tieneConflictoHorario($aula->id, $row['dia'], $row['hora_inicio'], $row['hora_fin'])) {
+            throw new \Exception("Conflicto de horario en el aula {$row['nombre_aula']} para el día {$row['dia']} de {$row['hora_inicio']} a {$row['hora_fin']}");
+        }
+    }
+
+    // Verificar conflicto de docente
+    if ($this->tieneConflictoDocente($user->id, $row['dia'], $row['hora_inicio'], $row['hora_fin'])) {
+        throw new \Exception("El docente ya tiene una clase asignada en el día {$row['dia']} de {$row['hora_inicio']} a {$row['hora_fin']}");
+    }
+
+    // Preparar datos para crear el horario
+    $horarioData = [
+        'grupo_materia_id' => $grupoMateria->id,
+        'dia' => $row['dia'],
+        'hora_inicio' => $row['hora_inicio'],
+        'hora_fin' => $row['hora_fin'],
+        'modalidad' => $row['modalidad'],
+    ];
+
+    // Asignar aula_id solo si es presencial y existe aula
+    if ($row['modalidad'] === 'presencial' && $aula) {
+        $horarioData['aula_id'] = $aula->id;
+    } else {
+        $horarioData['aula_id'] = null; // Explícitamente null para virtual
+    }
+
+    // Agregar enlace virtual si es virtual y se proporcionó
+    if ($row['modalidad'] === 'virtual' && !empty($row['enlace_virtual'])) {
+        $horarioData['enlace_virtual'] = $row['enlace_virtual'];
+    }
+
+    // Crear horario docente
+    HorarioDocente::create($horarioData);
+}
 
     private function tieneConflictoHorario($aulaId, $dia, $horaInicio, $horaFin, $excluirId = null)
     {
