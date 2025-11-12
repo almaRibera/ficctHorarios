@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\MateriaController;
 use App\Http\Controllers\Admin\GrupoController;
 use App\Http\Controllers\Admin\AsistenciaController;
 use App\Http\Controllers\Admin\ReporteController;
-
+use App\Http\Controllers\ImportacionController;
 use App\Http\Controllers\Docente\HorarioController;
 use App\Http\Controllers\Docente\AsistenciaController as DocenteAsistenciaController;
 
@@ -65,6 +65,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
         Route::post('/reportes/generar', [ReporteController::class, 'generar'])->name('reportes.generar');
         Route::post('/reportes/imprimir', [ReporteController::class, 'imprimir'])->name('reportes.imprimir');
+        //importacion
+        Route::prefix('importacion')->group(function () {
+        Route::get('/', [ImportacionController::class, 'index'])->name('importacion.index');
+        Route::post('/importar', [ImportacionController::class, 'importar'])->name('importacion.importar');
+        Route::get('/descargar-plantilla', [ImportacionController::class, 'descargarPlantilla'])->name('importacion.descargar-plantilla');
+        Route::get('/ver-ejemplo', [ImportacionController::class, 'verEjemplo'])->name('importacion.ver-ejemplo');
+         });
 
         // Rutas de grupos
         Route::get('/grupos', [GrupoController::class, 'index'])->name('grupos.index');
