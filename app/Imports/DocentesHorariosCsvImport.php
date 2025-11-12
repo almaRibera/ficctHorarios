@@ -213,7 +213,7 @@ class DocentesHorariosCsvImport
     } else {
         $horarioData['aula_id'] = null; // Explícitamente null para virtual
     }
-
+//hummm
     // Agregar enlace virtual si es virtual y se proporcionó
     if ($row['modalidad'] === 'virtual' && !empty($row['enlace_virtual'])) {
         $horarioData['enlace_virtual'] = $row['enlace_virtual'];
