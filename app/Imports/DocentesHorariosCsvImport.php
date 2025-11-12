@@ -103,8 +103,13 @@ class DocentesHorariosCsvImport
             $cleaned[$key] = trim($value);
             
             // Convertir valores numéricos
-            if (in_array($key, ['nivel', 'horas_semanales', 'capacidad'])) {
+            if (in_array($key, ['nivel', 'horas_semanales', 'capacidad_aula', 'piso_aula'])) {
                 $cleaned[$key] = is_numeric($value) ? (int)$value : 0;
+            }
+            
+            // Para modalidad, establecer presencial por defecto si está vacío
+            if ($key === 'modalidad' && empty($value)) {
+                $cleaned[$key] = 'presencial';
             }
         }
         return $cleaned;
@@ -155,16 +160,19 @@ class DocentesHorariosCsvImport
             ]
         );
 
-        // Buscar o crear aula
-        $aula = Aula::firstOrCreate(
-            ['nombre' => $row['nombre_aula']],
-            [
-                'piso' => $row['piso_aula'] ?? '1',
-                'tipo' => $row['tipo_aula'] ?? 'teorica',
-                'capacidad' => $row['capacidad_aula'] ?? 40,
-                'estado' => 'disponible'
-            ]
-        );
+        // Buscar o crear aula (solo si es presencial)
+        $aula = null;
+        if ($row['modalidad'] === 'presencial' && !empty($row['nombre_aula'])) {
+            $aula = Aula::firstOrCreate(
+                ['nombre' => $row['nombre_aula']],
+                [
+                    'piso' => $row['piso_aula'] ?? '1',
+                    'tipo' => $row['tipo_aula'] ?? 'teorica',
+                    'capacidad' => $row['capacidad_aula'] ?? 40,
+                    'estado' => 'disponible'
+                ]
+            );
+        }
 
         // Crear o actualizar grupo_materia
         $grupoMateria = GrupoMateria::updateOrCreate(
@@ -178,9 +186,11 @@ class DocentesHorariosCsvImport
             ]
         );
 
-        // Verificar conflicto de horario antes de crear
-        if ($this->tieneConflictoHorario($aula->id, $row['dia'], $row['hora_inicio'], $row['hora_fin'])) {
-            throw new \Exception("Conflicto de horario en el aula {$row['nombre_aula']} para el día {$row['dia']} de {$row['hora_inicio']} a {$row['hora_fin']}");
+        // Verificar conflicto de horario antes de crear (solo para presencial)
+        if ($row['modalidad'] === 'presencial' && $aula) {
+            if ($this->tieneConflictoHorario($aula->id, $row['dia'], $row['hora_inicio'], $row['hora_fin'])) {
+                throw new \Exception("Conflicto de horario en el aula {$row['nombre_aula']} para el día {$row['dia']} de {$row['hora_inicio']} a {$row['hora_fin']}");
+            }
         }
 
         // Verificar conflicto de docente
@@ -188,14 +198,29 @@ class DocentesHorariosCsvImport
             throw new \Exception("El docente ya tiene una clase asignada en el día {$row['dia']} de {$row['hora_inicio']} a {$row['hora_fin']}");
         }
 
-        // Crear horario docente
-        HorarioDocente::create([
+        // Preparar datos para crear el horario
+        $horarioData = [
             'grupo_materia_id' => $grupoMateria->id,
-            'aula_id' => $aula->id,
             'dia' => $row['dia'],
             'hora_inicio' => $row['hora_inicio'],
             'hora_fin' => $row['hora_fin'],
-        ]);
+            'modalidad' => $row['modalidad'],
+        ];
+
+        // Asignar aula_id solo si es presencial y existe aula
+        if ($row['modalidad'] === 'presencial' && $aula) {
+            $horarioData['aula_id'] = $aula->id;
+        } else {
+            $horarioData['aula_id'] = null;
+        }
+
+        // Agregar enlace virtual si es virtual y se proporcionó
+        if ($row['modalidad'] === 'virtual' && !empty($row['enlace_virtual'])) {
+            $horarioData['enlace_virtual'] = $row['enlace_virtual'];
+        }
+
+        // Crear horario docente
+        HorarioDocente::create($horarioData);
     }
 
     private function tieneConflictoHorario($aulaId, $dia, $horaInicio, $horaFin, $excluirId = null)
@@ -259,10 +284,12 @@ class DocentesHorariosCsvImport
             'nombre_materia' => 'required|string|max:255',
             'nivel' => 'required|integer|min:1|max:10',
             'tipo_materia' => ['nullable', Rule::in(['truncal', 'electiva'])],
-            'nombre_aula' => 'required|string|max:50',
+            'horas_semanales' => 'nullable|integer|min:1|max:20',
+            'nombre_aula' => 'nullable|string|max:50',
             'piso_aula' => ['nullable', Rule::in(['1', '2', '3', '4'])],
             'tipo_aula' => ['nullable', Rule::in(['teorica', 'laboratorio'])],
-            'horas_semanales' => 'nullable|integer|min:1|max:20',
+            'modalidad' => ['required', Rule::in(['presencial', 'virtual'])],
+            'enlace_virtual' => 'nullable|required_if:modalidad,virtual|url',
             'dia' => ['required', Rule::in(['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'])],
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
@@ -274,10 +301,13 @@ class DocentesHorariosCsvImport
         return [
             'hora_fin.after' => 'La hora fin debe ser posterior a la hora inicio',
             'dia.in' => 'El día debe ser: Lunes, Martes, Miércoles, Jueves, Viernes o Sábado',
+            'modalidad.in' => 'La modalidad debe ser: presencial o virtual',
             'tipo_materia.in' => 'El tipo de materia debe ser: truncal o electiva',
             'tipo_aula.in' => 'El tipo de aula debe ser: teorica o laboratorio',
             'piso_aula.in' => 'El piso debe ser: 1, 2, 3 o 4',
             'email.email' => 'El correo debe tener un formato válido',
+            'enlace_virtual.required_if' => 'El enlace virtual es requerido cuando la modalidad es virtual',
+            'enlace_virtual.url' => 'El enlace virtual debe ser una URL válida',
             '*.required' => 'El campo :attribute es obligatorio',
         ];
     }

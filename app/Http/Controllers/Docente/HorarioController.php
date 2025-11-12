@@ -51,13 +51,35 @@ class HorarioController extends Controller
         }
 
         $request->validate([
-            'aula_id' => 'required|exists:aulas,id',
+            'aula_id' => 'required_if:modalidad,presencial|exists:aulas,id',
+            'modalidad' => 'required|in:presencial,virtual',
             'dia' => 'required|in:Lunes,Martes,Miércoles,Jueves,Viernes,Sábado',
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
+            'enlace_virtual' => 'nullable|required_if:modalidad,virtual|url',
         ]);
 
-        // Verificar conflicto de horarios para el docente
+        // Solo verificar conflicto de aula si es presencial
+        if ($request->modalidad === 'presencial') {
+            // Verificar conflicto de horarios para el aula
+            $conflictoAula = HorarioDocente::where('aula_id', $request->aula_id)
+                ->where('dia', $request->dia)
+                ->where(function($query) use ($request) {
+                    $query->whereBetween('hora_inicio', [$request->hora_inicio, $request->hora_fin])
+                          ->orWhereBetween('hora_fin', [$request->hora_inicio, $request->hora_fin])
+                          ->orWhere(function($q) use ($request) {
+                              $q->where('hora_inicio', '<=', $request->hora_inicio)
+                                ->where('hora_fin', '>=', $request->hora_fin);
+                          });
+                })
+                ->exists();
+
+            if ($conflictoAula) {
+                return back()->withErrors(['conflicto' => 'El aula seleccionada está ocupada en este horario.']);
+            }
+        }
+
+        // Verificar conflicto de horarios para el docente (siempre)
         $conflictoDocente = HorarioDocente::whereHas('grupoMateria', function($query) use ($grupoMateria) {
                 $query->where('docente_id', $grupoMateria->docente_id);
             })
@@ -76,23 +98,6 @@ class HorarioController extends Controller
             return back()->withErrors(['conflicto' => 'Ya tiene una clase asignada en este horario.']);
         }
 
-        // Verificar conflicto de horarios para el aula
-        $conflictoAula = HorarioDocente::where('aula_id', $request->aula_id)
-            ->where('dia', $request->dia)
-            ->where(function($query) use ($request) {
-                $query->whereBetween('hora_inicio', [$request->hora_inicio, $request->hora_fin])
-                      ->orWhereBetween('hora_fin', [$request->hora_inicio, $request->hora_fin])
-                      ->orWhere(function($q) use ($request) {
-                          $q->where('hora_inicio', '<=', $request->hora_inicio)
-                            ->where('hora_fin', '>=', $request->hora_fin);
-                      });
-            })
-            ->exists();
-
-        if ($conflictoAula) {
-            return back()->withErrors(['conflicto' => 'El aula seleccionada está ocupada en este horario.']);
-        }
-
         // Calcular horas asignadas
         $horasAsignadas = $grupoMateria->horasAsignadas();
         $nuevasHoras = (strtotime($request->hora_fin) - strtotime($request->hora_inicio)) / 3600;
@@ -102,22 +107,37 @@ class HorarioController extends Controller
             return back()->withErrors(['horas' => 'Excede las horas semanales asignadas para esta materia.']);
         }
 
-        HorarioDocente::create([
+        // Preparar datos para crear el horario
+        $horarioData = [
             'grupo_materia_id' => $grupoMateria->id,
-            'aula_id' => $request->aula_id,
             'dia' => $request->dia,
             'hora_inicio' => $request->hora_inicio,
             'hora_fin' => $request->hora_fin,
-        ]);
+            'modalidad' => $request->modalidad,
+        ];
+
+        // Si es presencial, asignar aula_id, si es virtual puede ser null
+        if ($request->modalidad === 'presencial') {
+            $horarioData['aula_id'] = $request->aula_id;
+        } else {
+            $horarioData['aula_id'] = null;
+        }
+
+        // Agregar enlace virtual si se proporcionó
+        if ($request->modalidad === 'virtual' && $request->enlace_virtual) {
+            $horarioData['enlace_virtual'] = $request->enlace_virtual;
+        }
+
+        HorarioDocente::create($horarioData);
 
         // Registrar en bitácora
         Bitacora::create([
             'user_id' => Auth::id(),
-            'accion_realizada' => 'Asignó horario para materia: ' . $grupoMateria->materia->sigla . ' - Grupo: ' . $grupoMateria->grupo->sigla_grupo,
+            'accion_realizada' => 'Asignó horario ' . $request->modalidad . ' para materia: ' . $grupoMateria->materia->sigla . ' - Grupo: ' . $grupoMateria->grupo->sigla_grupo,
             'fecha_y_hora' => now(),
         ]);
 
-        return back()->with('success', 'Horario asignado exitosamente.');
+        return back()->with('success', 'Horario ' . $request->modalidad . ' asignado exitosamente.');
     }
 
     /**

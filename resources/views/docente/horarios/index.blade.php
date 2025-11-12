@@ -108,10 +108,21 @@
                             @endphp
                             
                             @foreach($horariosEnCelda as $item)
-                                <div class="text-xs p-2 rounded bg-blue-100 border border-blue-200 mb-1">
+                                <div class="text-xs p-2 rounded mb-1 
+                                    {{ $item['horario']->esPresencial() ? 'bg-blue-100 border border-blue-200' : 'bg-green-100 border border-green-200' }}">
                                     <div class="font-semibold">{{ $item['materiaAsignada']->materia->sigla }}</div>
                                     <div class="text-gray-600">{{ $item['materiaAsignada']->grupo->sigla_grupo }}</div>
-                                    <div class="text-blue-600">{{ $item['horario']->aula->nombre }}</div>
+                                    @if($item['horario']->esPresencial())
+                                        <div class="text-blue-600">{{ $item['horario']->aula->nombre }}</div>
+                                        <span class="text-blue-500 text-xs">🏫 Presencial</span>
+                                    @else
+                                        @if($item['horario']->enlace_virtual)
+                                        <a href="{{ $item['horario']->enlace_virtual }}" target="_blank" 
+                                           class="text-green-600 hover:underline text-xs">💻 Enlace Virtual</a>
+                                        @else
+                                        <span class="text-green-500 text-xs">💻 Virtual</span>
+                                        @endif
+                                    @endif
                                     <div class="text-gray-500 text-xs">
                                         {{ $item['horaInicio'] }} - {{ $item['horaFin'] }}
                                     </div>
@@ -147,7 +158,8 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modalidad</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación/Enlace</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
@@ -168,8 +180,29 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ $horario->hora_inicio->format('H:i') }} - {{ $horario->hora_fin->format('H:i') }}
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($horario->esPresencial())
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        🏫 Presencial
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        💻 Virtual
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $horario->aula->nombre }}
+                                @if($horario->esPresencial())
+                                    {{ $horario->aula->nombre }}
+                                @else
+                                    @if($horario->enlace_virtual)
+                                        <a href="{{ $horario->enlace_virtual }}" target="_blank" class="text-green-600 hover:underline">
+                                            Acceder a clase virtual
+                                        </a>
+                                    @else
+                                        <span class="text-gray-400">Sin enlace</span>
+                                    @endif
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <form action="{{ route('docente.horarios.destroy', $horario) }}" method="POST">

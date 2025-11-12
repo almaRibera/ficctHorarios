@@ -130,37 +130,22 @@
         </div>
 
         <!-- Instrucciones -->
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 sm:p-8">
-            <h3 class="text-xl font-bold text-indigo-800 mb-5 flex items-center">
-                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Instrucciones Importantes
-            </h3>
-            <ul class="grid sm:grid-cols-2 gap-3 text-sm text-indigo-700 font-medium">
-                <li class="flex items-start">
-                    <span class="text-indigo-600 mr-2">•</span> Usa la <strong>plantilla oficial</strong>
-                </li>
-                <li class="flex items-start">
-                    <span class="text-indigo-600 mr-2">•</span> No modifiques los <strong>encabezados</strong>
-                </li>
-                <li class="flex items-start">
-                    <span class="text-indigo-600 mr-2">•</span> Días: <code class="bg-white px-1 rounded text-xs">Lunes</code> a <code class="bg-white px-1 rounded text-xs">Sábado</code>
-                </li>
-                <li class="flex items-start">
-                    <span class="text-indigo-600 mr-2">•</span> Horas en formato <strong>24h</strong>: <code class="bg-white px-1 rounded text-xs">08:30</code>
-                </li>
-                <li class="flex items-start">
-                    <span class="text-indigo-600 mr-2">•</span> Hora fin > hora inicio
-                </li>
-                <li class="flex items-start">
-                    <span class="text-indigo-600 mr-2">•</span> Se detectan <strong>conflictos</strong> automáticamente
-                </li>
-                <li class="flex items-start">
-                    <span class="text-indigo-600 mr-2">•</span> CI duplicado = no se crea
-                </li>
-            </ul>
-        </div>
+        <!-- Instrucciones -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-blue-800 mb-3">Instrucciones de Uso</h3>
+                <ul class="list-disc list-inside space-y-2 text-blue-700">
+                    <li><strong>Descargue la plantilla</strong> para ver el formato requerido</li>
+                    <li><strong>Mantenga los encabezados de columna</strong> exactamente como en la plantilla</li>
+                    <li><strong>Modalidad:</strong> Use "presencial" o "virtual"</li>
+                    <li><strong>Para clases virtuales:</strong> Complete el campo "enlace_virtual"</li>
+                    <li><strong>Para clases presenciales:</strong> Complete los campos de aula</li>
+                    <li><strong>Los días deben ser:</strong> Lunes, Martes, Miércoles, Jueves, Viernes o Sábado</li>
+                    <li><strong>Las horas deben estar en formato 24h</strong> (ej: 08:30, 14:15)</li>
+                    <li><strong>La hora fin debe ser posterior</strong> a la hora inicio</li>
+                    <li><strong>El sistema detectará automáticamente</strong> conflictos de horarios</li>
+                    <li><strong>Los usuarios duplicados por email</strong> no se crearán nuevamente</li>
+                </ul>
+            </div>
 
     </div>
 </div>
